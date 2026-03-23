@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Donation DApp</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      margin-top: 80px;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #94a3b8;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 15px;
+      width: 350px;
+      margin: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      width: 95%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #22c55e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    #list {
+      margin-top: 20px;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    li {
+      background: #0f172a;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .total {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #22c55e;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>💰 Donation Tracker</h1>
+  <p>Transparent Blockchain Donations</p>
+
+  <div class="card">
+
+    <button onclick="connectWallet()">Connect Wallet</button>
+
+    <input type="text" id="amount" placeholder="Enter ETH amount">
+
+    <button onclick="donate()">Donate</button>
+
+    <button onclick="getDonations()">View Donations</button>
+
+    <div class="total" id="total"></div>
+
+    <ul id="list"></ul>
+
+  </div>
+</div>
+
+<script>
+let contract;
+
+const address = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+
+const abi = [
+  "function donate() public payable",
+  "function getDonations() public view returns (tuple(address donor,uint amount)[])"
+];
+
+async function connectWallet() {
+  if (!window.ethereum) {
+    alert("Install MetaMask");
+    return;
+  }
+
+  await window.ethereum.request({ method: "eth_requestAccounts" });
+
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+
+  contract = new ethers.Contract(address, abi, signer);
+
+  alert("Wallet Connected!");
+}
+
+async function donate() {
+  const amt = document.getElementById("amount").value;
+
+  const tx = await contract.donate({
+    value: ethers.parseEther(amt)
+  });
+
+  await tx.wait();
+
+  alert("Donation Successful!");
+}
+
+async function getDonations() {
+  const data = await contract.getDonations();
+  const list = document.getElementById("list");
+  const totalDiv = document.getElementById("total");
+
+  list.innerHTML = "";
+
+  let total = 0;
+
+  data.forEach(d => {
+    const amount = parseFloat(ethers.formatEther(d.amount));
+    total += amount;
+
+    const li = document.createElement("li");
+    li.innerText = d.donor + " donated " + amount + " ETH";
+    list.appendChild(li);
+  });
+
+  totalDiv.innerText = "Total Donations: " + total + " ETH";
+}
+</script>
+
+</body>
+</html>

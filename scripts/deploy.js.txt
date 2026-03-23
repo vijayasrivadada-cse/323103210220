@@ -1,0 +1,14 @@
+async function main() {
+  const DonationTracker = await ethers.getContractFactory("DonationTracker");
+
+  const contract = await DonationTracker.deploy();
+
+  await contract.waitForDeployment();
+
+  console.log("Contract deployed to:", await contract.getAddress());
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
